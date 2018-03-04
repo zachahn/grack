@@ -1,6 +1,6 @@
-require 'pathname'
+require "pathname"
 
-require 'grack/file_streamer'
+require "grack/file_streamer"
 
 module Grack
   ##
@@ -9,13 +9,13 @@ module Grack
   class GitAdapter
     ##
     # The number of bytes to read at a time from IO streams.
-    READ_SIZE = 32768
+    READ_SIZE = 32_768
 
     ##
     # Creates a new instance of this adapter.
     #
     # @param [String] bin_path the path to use for the Git binary.
-    def initialize(bin_path = 'git')
+    def initialize(bin_path = "git")
       @repository_path = nil
       @git_path = bin_path
     end
@@ -48,19 +48,19 @@ module Grack
     #   method.
     # @option opts [Boolean] :advertise_refs (false)
     def handle_pack(pack_type, io_in, io_out, opts = {})
-      args = %w{--stateless-rpc}
+      args = %w[--stateless-rpc]
       if opts.fetch(:advertise_refs, false)
         io_out.write(advertisement_prefix(pack_type))
-        args << '--advertise-refs'
+        args << "--advertise-refs"
       end
       args << repository_path.to_s
-      command(pack_type.sub(/^git-/, ''), args, io_in, io_out)
+      command(pack_type.sub(/^git-/, ""), args, io_in, io_out)
     end
 
     ##
     # Returns an object suitable for use as a Rack response body to provide the
     # content of a file at _path_.
-    # 
+    #
     # @param [Pathname] path the path to a file within the repository.
     #
     # @return [FileStreamer] a Rack response body that can stream the file
@@ -77,21 +77,20 @@ module Grack
     #
     # @return [void]
     def update_server_info
-      command('update-server-info', [], nil, nil, repository_path)
+      command("update-server-info", [], nil, nil, repository_path)
     end
 
     ##
     # @return [Boolean] +true+ if pushes should be allowed; otherwise; +false+.
     def allow_push?
-      config('http.receivepack') == 'true'
+      config("http.receivepack") == "true"
     end
 
     ##
     # @return [Boolean] +true+ if pulls should be allowed; otherwise; +false+.
     def allow_pull?
-      config('http.uploadpack') != 'false'
+      config("http.uploadpack") != "false"
     end
-
 
     private
 
@@ -103,7 +102,7 @@ module Grack
     # The string to prepand before ref advertisements
     def advertisement_prefix(pack_type)
       str = "# service=#{pack_type}\n"
-      '%04x' % (str.size + 4) << "#{str}0000"
+      format("%04x", (str.size + 4)) << "#{str}0000"
     end
 
     ##
@@ -112,7 +111,7 @@ module Grack
     # @return [String] the value for the given key.
     def config(key)
       capture_io = StringIO.new
-      command('config', ['--local', key], nil, capture_io, repository_path.to_s)
+      command("config", ["--local", key], nil, capture_io, repository_path.to_s)
       capture_io.string.chomp
     end
 
@@ -129,15 +128,15 @@ module Grack
     #   command.
     def command(cmd, args, io_in, io_out, dir = nil)
       cmd = [git_path, cmd] + args
-      opts = {:err => :close}
+      opts = { err: :close }
       opts[:chdir] = dir unless dir.nil?
       cmd << opts
-      IO.popen(cmd, 'r+b') do |pipe|
-        while ! io_in.nil? && chunk = io_in.read(READ_SIZE) do
+      IO.popen(cmd, "r+b") do |pipe|
+        while !io_in.nil? && chunk = io_in.read(READ_SIZE)
           pipe.write(chunk)
         end
         pipe.close_write
-        while chunk = pipe.read(READ_SIZE) do
+        while chunk = pipe.read(READ_SIZE)
           io_out.write(chunk) unless io_out.nil?
         end
       end

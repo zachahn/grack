@@ -5,7 +5,7 @@ module Grack
   class IOStreamer
     ##
     # The number of bytes to read at a time from IO streams.
-    READ_SIZE = 32768
+    READ_SIZE = 32_768
 
     ##
     # Creates a new instance of this object.
@@ -28,7 +28,7 @@ module Grack
     # @yieldparam [String] chunk a chunk read from the wrapped IO object.
     def each
       with_io do |io|
-        while chunk = io.read(READ_SIZE) do
+        while chunk = io.read(READ_SIZE)
           yield(chunk)
         end
       end

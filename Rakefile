@@ -1,14 +1,14 @@
-# encoding: UTF-8
+
 # -*- ruby -*-
 
-require 'erb'
-require 'rake/testtask'
-require 'rubygems/package_task'
-require 'rake/clean'
-require 'yard'
+require "erb"
+require "rake/testtask"
+require "rubygems/package_task"
+require "rake/clean"
+require "yard"
 
 # Load the gemspec file for this project.
-GEMSPEC = Dir['*.gemspec'].first
+GEMSPEC = Dir["*.gemspec"].first
 SPEC = eval(File.read(GEMSPEC), nil, GEMSPEC)
 
 # A dynamically generated list of files that should match the manifest (the
@@ -25,39 +25,39 @@ SPEC = eval(File.read(GEMSPEC), nil, GEMSPEC)
 # redundantly generated lists of files that probably will not protect the
 # project from the unintentional inclusion or exclusion of files in the
 # distribution.
-PKG_FILES = FileList.new(Dir.glob('**/*', File::FNM_DOTMATCH)) do |files|
+PKG_FILES = FileList.new(Dir.glob("**/*", File::FNM_DOTMATCH)) do |files|
   # Exclude anything that doesn't exist as well as directories.
-  files.exclude {|file| ! File.exist?(file) || File.directory?(file)}
+  files.exclude {|file| !File.exist?(file) || File.directory?(file)}
   # Exclude Git administrative files.
-  files.exclude('.git/**/*', '**/.gitignore', '**/.gitmodule', '**/.gitkeep')
+  files.exclude(".git/**/*", "**/.gitignore", "**/.gitmodule", "**/.gitkeep")
   # Exclude editor swap/temporary files.
-  files.exclude('**/.*.sw?', '**/.sw?')
+  files.exclude("**/.*.sw?", "**/.sw?")
   # Exclude the gemspec file.
   files.exclude(GEMSPEC)
   # Exclude the README template file.
-  files.exclude('README.md.erb')
+  files.exclude("README.md.erb")
   # Exclude resources for bundler.
-  files.exclude('Gemfile', 'Gemfile.lock')
+  files.exclude("Gemfile", "Gemfile.lock")
   files.exclude(%r{^.bundle([/\\]|$)})
   files.exclude(%r{^vendor/bundle([/\\]|$)})
   # Exclude generated content, except for the README file.
   files.exclude(%r{^(pkg|doc|coverage|.yardoc)([/\\]|$)})
   # Exclude examples.
-  files.exclude('examples/**/*')
+  files.exclude("examples/**/*")
   # Exclude Rubinius compiled Ruby files.
-  files.exclude('**/*.rbc')
+  files.exclude("**/*.rbc")
 end
 
 # Make sure that :clean and :clobber will not whack the repository files.
-CLEAN.exclude('.git/**')
+CLEAN.exclude(".git/**")
 # Vim swap files are fair game for clean up.
-CLEAN.include('**/.*.sw?')
+CLEAN.include("**/.*.sw?")
 
 # Returns the value of the VERSION environment variable as a Gem::Version object
 # assuming it is set and a valid Gem version string.  Otherwise, raises an
 # exception.
 def get_version_argument
-  version = ENV['VERSION']
+  version = ENV["VERSION"]
   if version.to_s.empty?
     raise "No version specified: Add VERSION=X.Y.Z to the command line"
   end
@@ -74,7 +74,7 @@ end
 def file_sub(path, pattern, replacement = nil, &b)
   tmp_path = "#{path}.tmp"
   File.open(path) do |infile|
-    File.open(tmp_path, 'w') do |outfile|
+    File.open(tmp_path, "w") do |outfile|
       infile.each do |line|
         outfile.write(line.sub(pattern, replacement, &b))
       end
@@ -100,8 +100,8 @@ def word_wrap(text, line_width = 80)
   end * "\n"
 end
 
-desc 'Alias for build:gem'
-task :build => 'build:gem'
+desc "Alias for build:gem"
+task build: "build:gem"
 
 # Build related tasks.
 namespace :build do
@@ -110,18 +110,18 @@ namespace :build do
 
   # Ensure that the manifest is consulted when building the gem.  Any
   # generated/compiled files should be available at that time.
-  task :gem => :check_manifest
+  task gem: :check_manifest
 
-  desc 'Verify the manifest'
+  desc "Verify the manifest"
   task :check_manifest do
     manifest_files = (SPEC.files + SPEC.test_files).sort.uniq
     pkg_files = PKG_FILES.sort.uniq
-    if manifest_files != pkg_files then
+    if manifest_files != pkg_files
       common_files = manifest_files & pkg_files
       manifest_files -= common_files
       pkg_files -= common_files
       message = ["The manifest does not match the automatic file list."]
-      unless manifest_files.empty? then
+      unless manifest_files.empty?
         message << "  Extraneous files:\n    " + manifest_files.join("\n    ")
       end
       unless pkg_files.empty?
@@ -132,56 +132,56 @@ namespace :build do
   end
 
   # Creates the README.md file from its template and other sources.
-  file 'README.md' => ['README.md.erb', 'LICENSE', GEMSPEC] do
+  file "README.md" => ["README.md.erb", "LICENSE", GEMSPEC] do
     spec = SPEC
-    File.open('README.md', 'w') do |readme|
+    File.open("README.md", "w") do |readme|
       readme.write(
-        ERB.new(File.read('README.md.erb'), nil, '-').result(binding)
+        ERB.new(File.read("README.md.erb"), nil, "-").result(binding)
       )
     end
   end
 end
 
 # Ensure that the clobber task also clobbers package files.
-task :clobber => 'build:clobber_package'
+task clobber: "build:clobber_package"
 
 # Create the documentation task.
 YARD::Rake::YardocTask.new
 # Ensure that the README file is (re)generated first.
-task :yard => 'README.md'
+task yard: "README.md"
 
 # Gem related tasks.
 namespace :gem do
-  desc 'Alias for build:gem'
-  task :build => 'build:gem'
+  desc "Alias for build:gem"
+  task build: "build:gem"
 
-  desc 'Publish the gemfile'
-  task :publish => ['version:check', :test, 'repo:tag', :build] do
+  desc "Publish the gemfile"
+  task publish: ["version:check", :test, "repo:tag", :build] do
     sh "gem push pkg/#{SPEC.name}-#{SPEC.version}*.gem"
   end
 end
 
 Rake::TestTask.new do |t|
-  t.pattern = 'tests/**/*_test.rb'
+  t.pattern = "tests/**/*_test.rb"
 end
 
 # Version string management tasks.
 namespace :version do
-  desc 'Set the version for the project to a specified version'
+  desc "Set the version for the project to a specified version"
   task :set do
     set_version(get_version_argument)
   end
 
-  desc 'Set the version for the project back to 0.0.0'
+  desc "Set the version for the project back to 0.0.0"
   task :reset do
-    set_version('0.0.0')
+    set_version("0.0.0")
   end
 
-  desc 'Check that all version strings are correctly set'
-  task :check => ['version:check:spec', 'version:check:news']
+  desc "Check that all version strings are correctly set"
+  task check: ["version:check:spec", "version:check:news"]
 
   namespace :check do
-    desc 'Check that the version in the gemspec is correctly set'
+    desc "Check that the version in the gemspec is correctly set"
     task :spec do
       version = get_version_argument
       if version != SPEC.version
@@ -189,17 +189,17 @@ namespace :version do
       end
     end
 
-    desc 'Check that the NEWS.md file mentions the version'
+    desc "Check that the NEWS.md file mentions the version"
     task :news do
       version = get_version_argument
       begin
-        File.open('NEWS.md') do |news|
+        File.open("NEWS.md") do |news|
           unless news.each_line.any? {|l| l =~ /^## v#{Regexp.escape(version.to_s)} /}
             raise "The NEWS.md file does not mention version `#{version}'"
           end
         end
       rescue Errno::ENOENT
-        raise 'No NEWS.md file found'
+        raise "No NEWS.md file found"
       end
     end
   end
@@ -207,16 +207,16 @@ end
 
 # Repository and workspace management tasks.
 namespace :repo do
-  desc 'Tag the current HEAD with the version string'
-  task :tag => :check_workspace do
+  desc "Tag the current HEAD with the version string"
+  task tag: :check_workspace do
     version = get_version_argument
     sh "git tag -s -m 'Release v#{version}' v#{version}"
   end
 
-  desc 'Ensure the workspace is fully committed and clean'
-  task :check_workspace => ['README.md'] do
+  desc "Ensure the workspace is fully committed and clean"
+  task check_workspace: ["README.md"] do
     unless `git status --untracked-files=all --porcelain`.empty?
-      raise 'Workspace has been modified.  Commit pending changes and try again.'
+      raise "Workspace has been modified.  Commit pending changes and try again."
     end
   end
 end

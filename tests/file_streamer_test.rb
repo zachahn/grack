@@ -1,17 +1,17 @@
-require_relative 'test_helper'
+require_relative "test_helper"
 
-require 'minitest/autorun'
-require 'minitest/unit'
-require 'tempfile'
+require "minitest/autorun"
+require "minitest/unit"
+require "tempfile"
 
-require 'grack/file_streamer'
+require "grack/file_streamer"
 
 class FileStreamerTest < MiniTest::Test
   include Grack
 
   def setup
-    @content = 'abcd' * 10_000
-    @file = Tempfile.new('foo')
+    @content = "abcd" * 10_000
+    @file = Tempfile.new("foo")
     @file.write(@content)
     @file.rewind
     @file.close
@@ -33,5 +33,4 @@ class FileStreamerTest < MiniTest::Test
   def test_each
     assert_equal @content, @streamer.to_enum.to_a.join
   end
-
 end

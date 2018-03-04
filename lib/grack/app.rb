@@ -1,10 +1,10 @@
-require 'pathname'
-require 'rack/request'
-require 'rack/response'
-require 'time'
-require 'zlib'
+require "pathname"
+require "rack/request"
+require "rack/response"
+require "time"
+require "zlib"
 
-require 'grack/git_adapter'
+require "grack/git_adapter"
 
 ##
 # A namespace for all Grack functionality.
@@ -14,21 +14,21 @@ module Grack
   class App
     ##
     # A list of supported pack service types.
-    VALID_SERVICE_TYPES = %w{git-upload-pack git-receive-pack}
+    VALID_SERVICE_TYPES = %w[git-upload-pack git-receive-pack]
 
     ##
     # Route mappings from URIs to valid verbs and handler functions.
     ROUTES = [
-      [%r'/(.*?)/(git-(?:upload|receive)-pack)$',        'POST', :handle_pack],
-      [%r'/(.*?)/info/refs$',                            'GET',  :info_refs],
-      [%r'/(.*?)/(HEAD)$',                               'GET',  :text_file],
-      [%r'/(.*?)/(objects/info/alternates)$',            'GET',  :text_file],
-      [%r'/(.*?)/(objects/info/http-alternates)$',       'GET',  :text_file],
-      [%r'/(.*?)/(objects/info/packs)$',                 'GET',  :info_packs],
-      [%r'/(.*?)/(objects/info/[^/]+)$',                 'GET',  :text_file],
-      [%r'/(.*?)/(objects/[0-9a-f]{2}/[0-9a-f]{38})$',   'GET',  :loose_object],
-      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.pack)$', 'GET', :pack_file],
-      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.idx)$', 'GET', :idx_file],
+      [%r{/(.*?)/(git-(?:upload|receive)-pack)$}, "POST", :handle_pack],
+      [%r{/(.*?)/info/refs$}, "GET", :info_refs],
+      [%r{/(.*?)/(HEAD)$}, "GET", :text_file],
+      [%r{/(.*?)/(objects/info/alternates)$}, "GET", :text_file],
+      [%r{/(.*?)/(objects/info/http-alternates)$}, "GET", :text_file],
+      [%r{/(.*?)/(objects/info/packs)$}, "GET", :info_packs],
+      [%r{/(.*?)/(objects/info/[^/]+)$}, "GET", :text_file],
+      [%r'/(.*?)/(objects/[0-9a-f]{2}/[0-9a-f]{38})$', "GET", :loose_object],
+      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.pack)$', "GET", :pack_file],
+      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.idx)$', "GET", :idx_file],
     ]
 
     ##
@@ -47,9 +47,9 @@ module Grack
     # @option opts [#call] :git_adapter_factory (->{ GitAdapter.new }) a
     #   call-able object that creates Git adapter instances per request.
     def initialize(opts = {})
-      @root                = Pathname.new(opts.fetch(:root, '.')).expand_path
-      @allow_push          = opts.fetch(:allow_push, nil)
-      @allow_pull          = opts.fetch(:allow_pull, nil)
+      @root = Pathname.new(opts.fetch(:root, ".")).expand_path
+      @allow_push = opts.fetch(:allow_push, nil)
+      @allow_pull = opts.fetch(:allow_pull, nil)
       @git_adapter_factory =
         opts.fetch(:git_adapter_factory, ->{ GitAdapter.new })
     end
@@ -116,15 +116,15 @@ module Grack
     # @return [Boolean] +true+ if the request is authorized; otherwise, +false+.
     def authorized?
       return allow_pull? if need_read?
-      return allow_push?
+      allow_push?
     end
 
     ##
     # @return [Boolean] +true+ if read permissions are needed; otherwise,
     #   +false+.
     def need_read?
-      (request_verb == 'GET' && pack_type != 'git-receive-pack') ||
-        request_verb == 'POST' && pack_type == 'git-upload-pack'
+      (request_verb == "GET" && pack_type != "git-receive-pack") ||
+        request_verb == "POST" && pack_type == "git-upload-pack"
     end
 
     ##
@@ -154,7 +154,7 @@ module Grack
       # Sanitize the URI:
       # * Unescape escaped characters
       # * Replace runs of / with a single /
-      path_info = Rack::Utils.unescape(request.path_info).gsub(%r{/+}, '/')
+      path_info = Rack::Utils.unescape(request.path_info).gsub(%r{/+}, "/")
 
       ROUTES.each do |path_matcher, verb, handler|
         path_info.match(path_matcher) do |match|
@@ -188,7 +188,7 @@ module Grack
         return no_access
       end
 
-      headers = {'Content-Type' => "application/x-#{@pack_type}-result"}
+      headers = { "Content-Type" => "application/x-#{@pack_type}-result" }
       exchange_pack(headers, request_io_in)
     end
 
@@ -199,21 +199,21 @@ module Grack
     # the Git adapter is used to update the +info/refs+ file which is then
     # served to the clients.  For Smart HTTP clients, the more efficient pack
     # file exchange mechanism is used.
-    # 
+    #
     # @return a Rack response object.
     def info_refs
-      @pack_type = request.params['service']
+      @pack_type = request.params["service"]
       return no_access unless authorized?
 
       if @pack_type.nil?
         git.update_server_info
         send_file(
-          git.file('info/refs'), 'text/plain; charset=utf-8', hdr_nocache
+          git.file("info/refs"), "text/plain; charset=utf-8", hdr_nocache
         )
       elsif valid_pack_type?
         headers = hdr_nocache
-        headers['Content-Type'] = "application/x-#{@pack_type}-advertisement"
-        exchange_pack(headers, nil, {:advertise_refs => true})
+        headers["Content-Type"] = "application/x-#{@pack_type}-advertisement"
+        exchange_pack(headers, nil, { advertise_refs: true })
       else
         not_found
       end
@@ -228,7 +228,7 @@ module Grack
     # @return a Rack response object.
     def info_packs(path)
       return no_access unless authorized?
-      send_file(git.file(path), 'text/plain; charset=utf-8', hdr_nocache)
+      send_file(git.file(path), "text/plain; charset=utf-8", hdr_nocache)
     end
 
     ##
@@ -243,7 +243,7 @@ module Grack
     def loose_object(path)
       return no_access unless authorized?
       send_file(
-        git.file(path), 'application/x-git-loose-object', hdr_cache_forever
+        git.file(path), "application/x-git-loose-object", hdr_cache_forever
       )
     end
 
@@ -259,7 +259,7 @@ module Grack
     def pack_file(path)
       return no_access unless authorized?
       send_file(
-        git.file(path), 'application/x-git-packed-objects', hdr_cache_forever
+        git.file(path), "application/x-git-packed-objects", hdr_cache_forever
       )
     end
 
@@ -277,7 +277,7 @@ module Grack
       return no_access unless authorized?
       send_file(
         git.file(path),
-        'application/x-git-packed-objects-toc',
+        "application/x-git-packed-objects-toc",
         hdr_cache_forever
       )
     end
@@ -293,7 +293,7 @@ module Grack
     # @return a Rack response object.
     def text_file(path)
       return no_access unless authorized?
-      send_file(git.file(path), 'text/plain', hdr_nocache)
+      send_file(git.file(path), "text/plain", hdr_nocache)
     end
 
     ##
@@ -311,8 +311,8 @@ module Grack
     def send_file(streamer, content_type, headers = {})
       return not_found if streamer.nil?
 
-      headers['Content-Type'] = content_type
-      headers['Last-Modified'] = streamer.mtime.httpdate
+      headers["Content-Type"] = content_type
+      headers["Last-Modified"] = streamer.mtime.httpdate
 
       [200, headers, streamer]
     end
@@ -326,7 +326,7 @@ module Grack
     #   data.
     # @param [Hash] opts options to pass to the Git adapter's #handle_pack
     #   method.
-    # 
+    #
     # @return a Rack response object.
     def exchange_pack(headers, io_in, opts = {})
       Rack::Response.new([], 200, headers).finish do |response|
@@ -340,7 +340,7 @@ module Grack
     # @return [#read] a +read+-able object that yields uncompressed data from
     #   the request body.
     def request_io_in
-      return request.body unless env['HTTP_CONTENT_ENCODING'] =~ /gzip/
+      return request.body unless env["HTTP_CONTENT_ENCODING"] =~ /gzip/
       Zlib::GzipReader.new(request.body)
     end
 
@@ -360,8 +360,8 @@ module Grack
     # @return [Boolean] +true+ if the requested path is considered invalid;
     #   otherwise, +false+.
     def bad_uri?(path)
-      invalid_segments = %w{. ..}
-      path.split('/').any? { |segment| invalid_segments.include?(segment) }
+      invalid_segments = %w[. ..]
+      path.split("/").any? { |segment| invalid_segments.include?(segment) }
     end
 
     # --------------------------------------
@@ -370,7 +370,7 @@ module Grack
 
     ##
     # A shorthand for specifying a text content type for the Rack response.
-    PLAIN_TYPE = {'Content-Type' => 'text/plain'}
+    PLAIN_TYPE = { "Content-Type" => "text/plain" }
 
     ##
     # Returns a Rack response appropriate for requests that use invalid verbs
@@ -382,8 +382,8 @@ module Grack
     # @return a Rack response appropriate for requests that use invalid verbs
     #   for the requested resources.
     def method_not_allowed
-      if env['SERVER_PROTOCOL'] == 'HTTP/1.1'
-        [405, PLAIN_TYPE, ['Method Not Allowed']]
+      if env["SERVER_PROTOCOL"] == "HTTP/1.1"
+        [405, PLAIN_TYPE, ["Method Not Allowed"]]
       else
         bad_request
       end
@@ -392,21 +392,20 @@ module Grack
     ##
     # @return a Rack response for generally bad requests.
     def bad_request
-      [400, PLAIN_TYPE, ['Bad Request']]
+      [400, PLAIN_TYPE, ["Bad Request"]]
     end
 
     ##
     # @return a Rack response for unlocatable resources.
     def not_found
-      [404, PLAIN_TYPE, ['Not Found']]
+      [404, PLAIN_TYPE, ["Not Found"]]
     end
 
     ##
     # @return a Rack response for forbidden resources.
     def no_access
-      [403, PLAIN_TYPE, ['Forbidden']]
+      [403, PLAIN_TYPE, ["Forbidden"]]
     end
-
 
     # ------------------------
     # header writing functions
@@ -418,9 +417,9 @@ module Grack
     # @return a hash of headers that should prevent caching of a Rack response.
     def hdr_nocache
       {
-        'Expires'       => 'Fri, 01 Jan 1980 00:00:00 GMT',
-        'Pragma'        => 'no-cache',
-        'Cache-Control' => 'no-cache, max-age=0, must-revalidate'
+        "Expires"       => "Fri, 01 Jan 1980 00:00:00 GMT",
+        "Pragma"        => "no-cache",
+        "Cache-Control" => "no-cache, max-age=0, must-revalidate",
       }
     end
 
@@ -429,11 +428,10 @@ module Grack
     def hdr_cache_forever
       now = Time.now().to_i
       {
-        'Date'          => now.to_s,
-        'Expires'       => (now + 31536000).to_s,
-        'Cache-Control' => 'public, max-age=31536000'
+        "Date"          => now.to_s,
+        "Expires"       => (now + 31_536_000).to_s,
+        "Cache-Control" => "public, max-age=31536000",
       }
     end
-
   end
 end

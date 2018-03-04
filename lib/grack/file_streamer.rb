@@ -1,6 +1,6 @@
-require 'pathname'
+require "pathname"
 
-require 'grack/io_streamer'
+require "grack/io_streamer"
 
 module Grack
   ##

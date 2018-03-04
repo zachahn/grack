@@ -1,1 +1,1 @@
-require 'grack/git_adapter'
+require "grack/git_adapter"

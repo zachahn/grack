@@ -1,17 +1,17 @@
-require_relative 'test_helper'
+require_relative "test_helper"
 
-require 'minitest/autorun'
-require 'minitest/unit'
-require 'tempfile'
+require "minitest/autorun"
+require "minitest/unit"
+require "tempfile"
 
-require 'grack/io_streamer'
+require "grack/io_streamer"
 
 class IOStreamerTest < MiniTest::Test
   include Grack
 
   def setup
-    @content = 'abcd' * 10_000
-    @file = Tempfile.new('foo')
+    @content = "abcd" * 10_000
+    @file = Tempfile.new("foo")
     @file.write(@content)
     @file.rewind
     @streamer = IOStreamer.new(@file, @file.mtime)
@@ -23,8 +23,9 @@ class IOStreamerTest < MiniTest::Test
   end
 
   def test_to_path
-    assert ! @streamer.respond_to?(:to_path), 'responds to #to_path'
+    assert !@streamer.respond_to?(:to_path), "responds to #to_path"
   end
+
   def test_mtime
     assert_equal File.mtime(@file.path), @streamer.mtime
   end
@@ -32,5 +33,4 @@ class IOStreamerTest < MiniTest::Test
   def test_each
     assert_equal @content, @streamer.to_enum.to_a.join
   end
-
 end

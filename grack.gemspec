@@ -1,13 +1,13 @@
 Gem::Specification.new do |s|
-  s.name        = 'grack'
-  s.version     = '0.1.0'
-  s.platform    = Gem::Platform::RUBY
-  s.authors     = ['Scott Chacon', 'Dawa Ometto', 'Jeremy Bopp']
-  s.email       =
-    ['schacon@gmail.com', 'd.ometto@gmail.com', 'jeremy@bopp.net']
-  s.homepage    = 'https://github.com/grackorg/grack'
-  s.license     = 'MIT'
-  s.summary     = <<-EOS
+  s.name = "grack"
+  s.version = "0.1.0"
+  s.platform = Gem::Platform::RUBY
+  s.authors = ["Scott Chacon", "Dawa Ometto", "Jeremy Bopp"]
+  s.email =
+    ["schacon@gmail.com", "d.ometto@gmail.com", "jeremy@bopp.net"]
+  s.homepage = "https://github.com/grackorg/grack"
+  s.license = "MIT"
+  s.summary = <<-EOS
 This project aims to replace the builtin git-http-backend CGI handler
 distributed with C Git with a Rack application.
   EOS
@@ -21,17 +21,17 @@ However, it is possible to use a different backend by specifying a different
 Adapter.
   EOD
 
-  s.add_dependency('rack')
+  s.add_dependency("rack")
 
-  s.add_development_dependency('rake', '~> 10.1', '>= 10.1.1')
-  s.add_development_dependency('rack-test', '~> 0.6', '>= 0.6.3')
-  s.add_development_dependency('minitest', '~> 5.8', '>= 5.8.0')
-  s.add_development_dependency('mocha', '~> 1.1', '>= 1.1.0')
-  s.add_development_dependency('simplecov', '~> 0.10', '>= 0.10.0')
-  s.add_development_dependency('yard', '~> 0.8.7', '>= 0.8.7.3')
-  s.add_development_dependency('redcarpet', '~> 3.1', '>= 3.1.0')
-  s.add_development_dependency('github-markup', '~> 1.0', '>= 1.0.2')
-  s.add_development_dependency('pry', '~> 0')
+  s.add_development_dependency("rake", "~> 10.1", ">= 10.1.1")
+  s.add_development_dependency("rack-test", "~> 0.6", ">= 0.6.3")
+  s.add_development_dependency("minitest", "~> 5.8", ">= 5.8.0")
+  s.add_development_dependency("mocha", "~> 1.1", ">= 1.1.0")
+  s.add_development_dependency("simplecov", "~> 0.10", ">= 0.10.0")
+  s.add_development_dependency("yard", "~> 0.8.7", ">= 0.8.7.3")
+  s.add_development_dependency("redcarpet", "~> 3.1", ">= 3.1.0")
+  s.add_development_dependency("github-markup", "~> 1.0", ">= 1.0.2")
+  s.add_development_dependency("pry", "~> 0")
   s.add_development_dependency("rubocop")
   s.add_development_dependency("the_bath_of_zahn")
 
@@ -39,7 +39,7 @@ Adapter.
   # here.  This and the test_files list will be compared against an
   # automatically generated list by rake to identify files potentially missed by
   # inclusion or exclusion rules.
-  s.files = %w(
+  s.files = %w[
     .travis.yml
     .yardopts
     LICENSE
@@ -52,9 +52,9 @@ Adapter.
     lib/grack/file_streamer.rb
     lib/grack/git_adapter.rb
     lib/grack/io_streamer.rb
-  )
+  ]
   # Explicitly list all test files that should be included into the gem here.
-  s.test_files   = %w(
+  s.test_files = %w[
     tests/app_test.rb
     tests/example/_git/COMMIT_EDITMSG
     tests/example/_git/HEAD
@@ -86,5 +86,5 @@ Adapter.
     tests/git_adapter_test.rb
     tests/io_streamer_test.rb
     tests/test_helper.rb
-  )
+  ]
 end

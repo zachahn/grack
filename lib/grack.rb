@@ -1,1 +1,1 @@
-require 'grack/app'
+require "grack/app"
