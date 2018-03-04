@@ -32,6 +32,8 @@ Adapter.
   s.add_development_dependency('redcarpet', '~> 3.1', '>= 3.1.0')
   s.add_development_dependency('github-markup', '~> 1.0', '>= 1.0.2')
   s.add_development_dependency('pry', '~> 0')
+  s.add_development_dependency("rubocop")
+  s.add_development_dependency("the_bath_of_zahn")
 
   # Explicitly list all non-test files that should be included into the gem
   # here.  This and the test_files list will be compared against an
