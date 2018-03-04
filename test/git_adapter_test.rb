@@ -1,12 +1,4 @@
-require_relative "test_helper"
-
-require "fileutils"
-require "minitest/autorun"
-require "minitest/unit"
-require "mocha/setup"
-require "stringio"
-
-require "grack/git_adapter"
+require "test_helper"
 
 class GitAdapterTest < Minitest::Test
   include Grack

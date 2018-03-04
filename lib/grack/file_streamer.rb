@@ -1,7 +1,3 @@
-require "pathname"
-
-require "grack/io_streamer"
-
 module Grack
   ##
   # A Rack body implementation that streams a given file in chunks for a Rack

@@ -1,11 +1,3 @@
-require "pathname"
-require "rack/request"
-require "rack/response"
-require "time"
-require "zlib"
-
-require "grack/git_adapter"
-
 ##
 # A namespace for all Grack functionality.
 module Grack

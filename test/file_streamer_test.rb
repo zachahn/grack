@@ -1,10 +1,4 @@
-require_relative "test_helper"
-
-require "minitest/autorun"
-require "minitest/unit"
-require "tempfile"
-
-require "grack/file_streamer"
+require "test_helper"
 
 class FileStreamerTest < MiniTest::Test
   include Grack

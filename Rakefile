@@ -162,7 +162,8 @@ namespace :gem do
 end
 
 Rake::TestTask.new do |t|
-  t.pattern = "tests/**/*_test.rb"
+  t.libs << "test"
+  t.pattern = "test/**/*_test.rb"
 end
 
 # Version string management tasks.

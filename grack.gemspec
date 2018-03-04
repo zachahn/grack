@@ -55,36 +55,36 @@ Adapter.
   ]
   # Explicitly list all test files that should be included into the gem here.
   s.test_files = %w[
-    tests/app_test.rb
-    tests/example/_git/COMMIT_EDITMSG
-    tests/example/_git/HEAD
-    tests/example/_git/config
-    tests/example/_git/description
-    tests/example/_git/hooks/applypatch-msg.sample
-    tests/example/_git/hooks/commit-msg.sample
-    tests/example/_git/hooks/post-commit.sample
-    tests/example/_git/hooks/post-receive.sample
-    tests/example/_git/hooks/post-update.sample
-    tests/example/_git/hooks/pre-applypatch.sample
-    tests/example/_git/hooks/pre-commit.sample
-    tests/example/_git/hooks/pre-rebase.sample
-    tests/example/_git/hooks/prepare-commit-msg.sample
-    tests/example/_git/hooks/update.sample
-    tests/example/_git/index
-    tests/example/_git/info/exclude
-    tests/example/_git/info/refs
-    tests/example/_git/logs/HEAD
-    tests/example/_git/logs/refs/heads/master
-    tests/example/_git/objects/31/d73eb4914a8ddb6cb0e4adf250777161118f90
-    tests/example/_git/objects/cb/067e06bdf6e34d4abebf6cf2de85d65a52c65e
-    tests/example/_git/objects/ce/013625030ba8dba906f756967f9e9ca394464a
-    tests/example/_git/objects/info/packs
-    tests/example/_git/objects/pack/pack-62c9f443d8405cd6da92dcbb4f849cc01a339c06.idx
-    tests/example/_git/objects/pack/pack-62c9f443d8405cd6da92dcbb4f849cc01a339c06.pack
-    tests/example/_git/refs/heads/master
-    tests/file_streamer_test.rb
-    tests/git_adapter_test.rb
-    tests/io_streamer_test.rb
-    tests/test_helper.rb
+    test/app_test.rb
+    test/example/_git/COMMIT_EDITMSG
+    test/example/_git/HEAD
+    test/example/_git/config
+    test/example/_git/description
+    test/example/_git/hooks/applypatch-msg.sample
+    test/example/_git/hooks/commit-msg.sample
+    test/example/_git/hooks/post-commit.sample
+    test/example/_git/hooks/post-receive.sample
+    test/example/_git/hooks/post-update.sample
+    test/example/_git/hooks/pre-applypatch.sample
+    test/example/_git/hooks/pre-commit.sample
+    test/example/_git/hooks/pre-rebase.sample
+    test/example/_git/hooks/prepare-commit-msg.sample
+    test/example/_git/hooks/update.sample
+    test/example/_git/index
+    test/example/_git/info/exclude
+    test/example/_git/info/refs
+    test/example/_git/logs/HEAD
+    test/example/_git/logs/refs/heads/master
+    test/example/_git/objects/31/d73eb4914a8ddb6cb0e4adf250777161118f90
+    test/example/_git/objects/cb/067e06bdf6e34d4abebf6cf2de85d65a52c65e
+    test/example/_git/objects/ce/013625030ba8dba906f756967f9e9ca394464a
+    test/example/_git/objects/info/packs
+    test/example/_git/objects/pack/pack-62c9f443d8405cd6da92dcbb4f849cc01a339c06.idx
+    test/example/_git/objects/pack/pack-62c9f443d8405cd6da92dcbb4f849cc01a339c06.pack
+    test/example/_git/refs/heads/master
+    test/file_streamer_test.rb
+    test/git_adapter_test.rb
+    test/io_streamer_test.rb
+    test/test_helper.rb
   ]
 end

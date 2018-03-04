@@ -1,16 +1,4 @@
-require_relative "test_helper"
-
-require "digest/sha1"
-require "minitest/autorun"
-require "minitest/unit"
-require "mocha/setup"
-require "pathname"
-require "rack/test"
-require "tempfile"
-require "zlib"
-
-require "grack/app"
-require "grack/git_adapter"
+require "test_helper"
 
 class AppTest < Minitest::Test
   include Rack::Test::Methods

@@ -1,7 +1,3 @@
-require "pathname"
-
-require "grack/file_streamer"
-
 module Grack
   ##
   # A wrapper for interacting with Git repositories using the git command line
