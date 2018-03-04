@@ -6,20 +6,12 @@ require "minitest/autorun"
 require "mocha/setup"
 require "stringio"
 require "pathname"
-require "simplecov"
 require "tmpdir"
-require "coveralls"
 
 require "digest/sha1"
 require "rack/test"
 require "tempfile"
 require "zlib"
-
-Coveralls.wear!
-
-SimpleCov.start do
-  add_filter "tests/"
-end
 
 class Minitest::Test
   def git_path

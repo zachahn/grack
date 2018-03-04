@@ -1,6 +1,5 @@
 [![Gem Version](https://badge.fury.io/rb/grack.svg)](http://badge.fury.io/rb/grack)
 [![Build Status](https://travis-ci.org/grackorg/grack.svg?branch=master)](https://travis-ci.org/grackorg/grack)
-[![Coverage Status](https://coveralls.io/repos/grackorg/grack/badge.svg?branch=master&service=github)](https://coveralls.io/github/grackorg/grack?branch=master)
 [![Dependency Status](https://gemnasium.com/grackorg/grack.svg)](https://gemnasium.com/grackorg/grack)
 
 # Grack - Ruby/Rack Git Smart HTTP Server Handler
@@ -155,7 +154,6 @@ Adapters that support hooks:
 * rack-test (>= 0.6.3, ~> 0.6)
 * minitest (>= 5.8.0, ~> 5.8)
 * mocha (>= 1.1.0, ~> 1.1)
-* simplecov (>= 0.10.0, ~> 0.10)
 * yard (>= 0.8.7.3, ~> 0.8.7)
 * redcarpet (>= 3.1.0, ~> 3.1)
 * github-markup (>= 1.0.2, ~> 1.0)
