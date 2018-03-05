@@ -7,19 +7,17 @@ Gem::Specification.new do |s|
     ["schacon@gmail.com", "d.ometto@gmail.com", "jeremy@bopp.net"]
   s.homepage = "https://github.com/grackorg/grack"
   s.license = "MIT"
-  s.summary = <<-EOS
-This project aims to replace the builtin git-http-backend CGI handler
-distributed with C Git with a Rack application.
-  EOS
-  s.description = <<-EOD
-This project aims to replace the builtin git-http-backend CGI handler
-distributed with C Git with a Rack application. By default, Grack uses calls to
-git on the system to implement Smart HTTP. Since the git-http-backend is really
-just a simple wrapper for the upload-pack and receive-pack processes with the
-'--stateless-rpc' option, this does not actually re-implement very much.
-However, it is possible to use a different backend by specifying a different
-Adapter.
-  EOD
+  s.summary =
+    "This project aims to replace the builtin git-http-backend CGI handler " \
+    "distributed with C Git with a Rack application."
+  s.description =
+    "This project aims to replace the builtin git-http-backend CGI handler " \
+    "distributed with C Git with a Rack application. By default, Grack uses " \
+    "calls to git on the system to implement Smart HTTP. Since the " \
+    "git-http-backend is really just a simple wrapper for the upload-pack " \
+    "and receive-pack processes with the '--stateless-rpc' option, this does " \
+    "not actually re-implement very much. However, it is possible to use a " \
+    "different backend by specifying a different Adapter."
 
   s.add_dependency("rack")
 
