@@ -180,7 +180,7 @@ class AppTest < Minitest::Test
   def test_info_packs
     get "#{example_repo_urn}/objects/info/packs"
     assert_equal 200, r.status
-    assert_match /P pack-(.*?).pack/, r.body
+    assert_match(/P pack-(.*?).pack/, r.body)
   end
 
   def test_no_access_info_packs
@@ -401,7 +401,7 @@ class AppTest < Minitest::Test
 
     session.get "#{example_repo_urn}/objects/info/packs"
     assert_equal 200, session.last_response.status
-    assert_match /P pack-(.*?).pack/, session.last_response.body
+    assert_match(/P pack-(.*?).pack/, session.last_response.body)
   end
 
   def test_config_adapter_with_custom_adapter
