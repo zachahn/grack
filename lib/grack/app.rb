@@ -70,6 +70,12 @@ module Grack
       @git = @git_adapter_factory.call
       @env = env
       @request = Rack::Request.new(env)
+      @auth = Auth.new(
+        env: env,
+        allow_push: @allow_push,
+        allow_pull: @allow_pull,
+        git: @git
+      )
       route
     end
 
@@ -96,46 +102,9 @@ module Grack
     attr_reader :repository_uri
 
     ##
-    # The HTTP verb of the request.
-    attr_reader :request_verb
-
-    ##
     # The requested pack type.  Will be +nil+ for requests that do no involve
     # pack RPCs.
     attr_reader :pack_type
-
-    ##
-    # @return [Boolean] +true+ if the request is authorized; otherwise, +false+.
-    def authorized?
-      return allow_pull? if need_read?
-      allow_push?
-    end
-
-    ##
-    # @return [Boolean] +true+ if read permissions are needed; otherwise,
-    #   +false+.
-    def need_read?
-      (request_verb == "GET" && pack_type != "git-receive-pack") ||
-        request_verb == "POST" && pack_type == "git-upload-pack"
-    end
-
-    ##
-    # Determines whether or not pushes into the requested repository are
-    # allowed.
-    #
-    # @return [Boolean] +true+ if pushes are allowed, +false+ otherwise.
-    def allow_push?
-      @allow_push || (@allow_push.nil? && git.allow_push?)
-    end
-
-    ##
-    # Determines whether or not fetches/pulls from the requested repository are
-    # allowed.
-    #
-    # @return [Boolean] +true+ if fetches are allowed, +false+ otherwise.
-    def allow_pull?
-      @allow_pull || (@allow_pull.nil? && git.allow_pull?)
-    end
 
     ##
     # Routes requests to appropriate handlers.  Performs request path cleanup
@@ -151,18 +120,18 @@ module Grack
       ROUTES.each do |path_matcher, verb, handler|
         path_info.match(path_matcher) do |match|
           @repository_uri = match[1]
-          @request_verb = verb
+          @auth.request_verb = verb
 
           return method_not_allowed unless verb == request.request_method
-          return bad_request if bad_uri?(@repository_uri)
+          return ErrorResponse.bad_request if bad_uri?(@repository_uri)
 
           git.repository_path = root + @repository_uri
-          return not_found unless git.exist?
+          return ErrorResponse.not_found unless git.exist?
 
           return send(handler, *match[2..-1])
         end
       end
-      not_found
+      ErrorResponse.not_found
     end
 
     ##
@@ -175,9 +144,10 @@ module Grack
     # @return a Rack response object.
     def handle_pack(pack_type)
       @pack_type = pack_type
+      @auth.pack_type = pack_type
       unless request.content_type == "application/x-#{@pack_type}-request" &&
-             valid_pack_type? && authorized?
-        return no_access
+             valid_pack_type? && @auth.authorized?
+        return ErrorResponse.no_access
       end
 
       headers = { "Content-Type" => "application/x-#{@pack_type}-result" }
@@ -195,7 +165,8 @@ module Grack
     # @return a Rack response object.
     def info_refs
       @pack_type = request.params["service"]
-      return no_access unless authorized?
+      @auth.pack_type = @pack_type
+      return ErrorResponse.no_access unless @auth.authorized?
 
       if @pack_type.nil?
         git.update_server_info
@@ -207,7 +178,7 @@ module Grack
         headers["Content-Type"] = "application/x-#{@pack_type}-advertisement"
         exchange_pack(headers, nil, { advertise_refs: true })
       else
-        not_found
+        ErrorResponse.not_found
       end
     end
 
@@ -219,7 +190,7 @@ module Grack
     #
     # @return a Rack response object.
     def info_packs(path)
-      return no_access unless authorized?
+      return ErrorResponse.no_access unless @auth.authorized?
       send_file(git.file(path), "text/plain; charset=utf-8", hdr_nocache)
     end
 
@@ -233,7 +204,7 @@ module Grack
     #
     # @return a Rack response object.
     def loose_object(path)
-      return no_access unless authorized?
+      return ErrorResponse.no_access unless @auth.authorized?
       send_file(
         git.file(path), "application/x-git-loose-object", hdr_cache_forever
       )
@@ -249,7 +220,7 @@ module Grack
     #
     # @return a Rack response object.
     def pack_file(path)
-      return no_access unless authorized?
+      return ErrorResponse.no_access unless @auth.authorized?
       send_file(
         git.file(path), "application/x-git-packed-objects", hdr_cache_forever
       )
@@ -266,7 +237,7 @@ module Grack
     #
     # @return a Rack response object.
     def idx_file(path)
-      return no_access unless authorized?
+      return ErrorResponse.no_access unless @auth.authorized?
       send_file(
         git.file(path),
         "application/x-git-packed-objects-toc",
@@ -284,7 +255,7 @@ module Grack
     #
     # @return a Rack response object.
     def text_file(path)
-      return no_access unless authorized?
+      return ErrorResponse.no_access unless @auth.authorized?
       send_file(git.file(path), "text/plain", hdr_nocache)
     end
 
@@ -301,7 +272,7 @@ module Grack
     #
     # @return a Rack response object.
     def send_file(streamer, content_type, headers = {})
-      return not_found if streamer.nil?
+      return ErrorResponse.not_found if streamer.nil?
 
       headers["Content-Type"] = content_type
       headers["Last-Modified"] = streamer.mtime.httpdate
@@ -377,26 +348,8 @@ module Grack
       if env["SERVER_PROTOCOL"] == "HTTP/1.1"
         [405, PLAIN_TYPE, ["Method Not Allowed"]]
       else
-        bad_request
+        ErrorResponse.bad_request
       end
-    end
-
-    ##
-    # @return a Rack response for generally bad requests.
-    def bad_request
-      [400, PLAIN_TYPE, ["Bad Request"]]
-    end
-
-    ##
-    # @return a Rack response for unlocatable resources.
-    def not_found
-      [404, PLAIN_TYPE, ["Not Found"]]
-    end
-
-    ##
-    # @return a Rack response for forbidden resources.
-    def no_access
-      [403, PLAIN_TYPE, ["Forbidden"]]
     end
 
     # ------------------------
