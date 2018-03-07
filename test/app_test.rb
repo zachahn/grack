@@ -13,7 +13,7 @@ class AppTest < Minitest::Test
       root: repositories_root,
       allow_pull: true,
       allow_push: true,
-      git_adapter_factory: ->{ GitAdapter.new(git_path) },
+      git_adapter_factory: -> { GitAdapter.new(git_path) },
     }
   end
 
@@ -439,7 +439,7 @@ class AppTest < Minitest::Test
       App.new(
         root: repositories_root,
         adapter: git_adapter_class,
-        git_adapter_factory: ->{ GitAdapter.new(git_path) }
+        git_adapter_factory: -> { GitAdapter.new(git_path) }
       )
     )
 

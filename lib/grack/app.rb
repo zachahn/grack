@@ -43,7 +43,7 @@ module Grack
       @allow_push = opts.fetch(:allow_push, nil)
       @allow_pull = opts.fetch(:allow_pull, nil)
       @git_adapter_factory =
-        opts.fetch(:git_adapter_factory, ->{ GitAdapter.new })
+        opts.fetch(:git_adapter_factory, -> { GitAdapter.new })
     end
 
     ##

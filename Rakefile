@@ -27,7 +27,7 @@ SPEC = eval(File.read(GEMSPEC), nil, GEMSPEC)
 # distribution.
 PKG_FILES = FileList.new(Dir.glob("**/*", File::FNM_DOTMATCH)) do |files|
   # Exclude anything that doesn't exist as well as directories.
-  files.exclude {|file| !File.exist?(file) || File.directory?(file)}
+  files.exclude { |file| !File.exist?(file) || File.directory?(file) }
   # Exclude Git administrative files.
   files.exclude(".git/**/*", "**/.gitignore", "**/.gitmodule", "**/.gitkeep")
   # Exclude editor swap/temporary files.
@@ -195,7 +195,7 @@ namespace :version do
       version = get_version_argument
       begin
         File.open("NEWS.md") do |news|
-          unless news.each_line.any? {|l| l =~ /^## v#{Regexp.escape(version.to_s)} /}
+          unless news.each_line.any? { |l| l =~ /^## v#{Regexp.escape(version.to_s)} / }
             raise "The NEWS.md file does not mention version `#{version}'"
           end
         end

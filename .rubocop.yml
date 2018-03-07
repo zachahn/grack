@@ -1,3 +1,11 @@
 ---
 inherit_gem:
   the_bath_of_zahn: config/rubocop.yml
+
+Layout/SpaceInsideBlockBraces:
+  EnforcedStyle: space
+  EnforcedStyleForEmptyBraces: no_space
+  SpaceBeforeBlockParameters: true
+
+Layout/SpaceBeforeBlockBraces:
+  Enabled: true
