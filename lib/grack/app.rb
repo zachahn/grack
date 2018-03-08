@@ -159,7 +159,11 @@ module Grack
             return pack_file(path)
           elsif handler == :idx_file
             path = match[2]
-            return idx_file(path)
+            return HandleIdxFile.new(
+              git: git,
+              auth: @auth,
+              request_verb: verb
+            ).call(path: path)
           end
         end
       end
@@ -227,25 +231,6 @@ module Grack
       return ErrorResponse.no_access unless @auth.authorized?
       send_file(
         git.file(path), "application/x-git-packed-objects", hdr_cache_forever
-      )
-    end
-
-    ##
-    # Process a request for a pack index file located at _path_ for the selected
-    # repository.  If the file is located, the content type is set to
-    # +application/x-git-packed-objects-toc+ and permanent caching is enabled.
-    #
-    # @param [String] path the path to a pack index file within a Git
-    #   repository, such as
-    #   +pack/pack-62c9f443d8405cd6da92dcbb4f849cc01a339c06.idx+.
-    #
-    # @return a Rack response object.
-    def idx_file(path)
-      return ErrorResponse.no_access unless @auth.authorized?
-      send_file(
-        git.file(path),
-        "application/x-git-packed-objects-toc",
-        hdr_cache_forever
       )
     end
 
