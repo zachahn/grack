@@ -5,10 +5,6 @@ module Grack
   # A Rack application for serving Git repositories over HTTP.
   class App
     ##
-    # A list of supported pack service types.
-    VALID_SERVICE_TYPES = %w[git-upload-pack git-receive-pack]
-
-    ##
     # Route mappings from URIs to valid verbs and handler functions.
     ROUTES = [
       [%r{/(.*?)/(git-(?:upload|receive)-pack)$}, "POST", :handle_pack],
@@ -102,11 +98,6 @@ module Grack
     attr_reader :repository_uri
 
     ##
-    # The requested pack type.  Will be +nil+ for requests that do no involve
-    # pack RPCs.
-    attr_reader :pack_type
-
-    ##
     # Routes requests to appropriate handlers.  Performs request path cleanup
     # and several sanity checks prior to attempting to handle the request.
     #
@@ -129,13 +120,12 @@ module Grack
           return ErrorResponse.not_found unless git.exist?
 
           if handler == :handle_pack
-            pack_type = match[2]
             return HandlePack.new(
               git: git,
               auth: @auth,
               request_verb: verb
             ).call(
-              pack_type: pack_type,
+              pack_type: match[2],
               content_type: request.content_type,
               request_body: request.body,
               encoding: env["HTTP_CONTENT_ENCODING"]
@@ -147,90 +137,39 @@ module Grack
               request_verb: verb
             ).call(pack_type: request.params["service"])
           elsif handler == :text_file
-            path = match[2]
             return HandleTextFile.new(
               git: git,
               auth: @auth,
               request_verb: verb
-            ).call(path: path)
+            ).call(path: match[2])
           elsif handler == :info_packs
-            path = match[2]
             return HandleInfoPacks.new(
               git: git,
               auth: @auth,
               request_verb: verb
-            ).call(path: path)
+            ).call(path: match[2])
           elsif handler == :loose_object
-            path = match[2]
             return HandleLooseObject.new(
               git: git,
               auth: @auth,
               request_verb: verb
-            ).call(path: path)
+            ).call(path: match[2])
           elsif handler == :pack_file
-            path = match[2]
             return HandlePackFile.new(
               git: git,
               auth: @auth,
               request_verb: verb
-            ).call(path: path)
+            ).call(path: match[2])
           elsif handler == :idx_file
-            path = match[2]
             return HandleIdxFile.new(
               git: git,
               auth: @auth,
               request_verb: verb
-            ).call(path: path)
+            ).call(path: match[2])
           end
         end
       end
       ErrorResponse.not_found
-    end
-
-    ##
-    # Produces a Rack response that wraps the output from the Git adapter.
-    #
-    # A 404 response is produced if _streamer_ is +nil+.  Otherwise a 200
-    # response is produced with _streamer_ as the response body.
-    #
-    # @param [FileStreamer,IOStreamer] streamer a provider of content for the
-    #   response body.
-    # @param [String] content_type the MIME type of the content.
-    # @param [Hash] headers additional headers to include in the response.
-    #
-    # @return a Rack response object.
-    def send_file(streamer, content_type, headers = {})
-      return ErrorResponse.not_found if streamer.nil?
-
-      headers["Content-Type"] = content_type
-      headers["Last-Modified"] = streamer.mtime.httpdate
-
-      [200, headers, streamer]
-    end
-
-    ##
-    # Opens a tunnel for the pack file exchange protocol between the client and
-    # the Git adapter.
-    #
-    # @param [Hash] headers headers to provide in the Rack response.
-    # @param [#read] io_in a readable, IO-like object providing client input
-    #   data.
-    # @param [Hash] opts options to pass to the Git adapter's #handle_pack
-    #   method.
-    #
-    # @return a Rack response object.
-    def exchange_pack(headers, io_in, opts = {})
-      Rack::Response.new([], 200, headers).finish do |response|
-        git.handle_pack(pack_type, io_in, response, opts)
-      end
-    end
-
-    ##
-    # Determines whether or not the requested pack type is valid.
-    #
-    # @return [Boolean] +true+ if the pack type is valid; otherwise, +false+.
-    def valid_pack_type?
-      VALID_SERVICE_TYPES.include?(pack_type)
     end
 
     ##
@@ -268,33 +207,6 @@ module Grack
       else
         ErrorResponse.bad_request
       end
-    end
-
-    # ------------------------
-    # header writing functions
-    # ------------------------
-
-    ##
-    # NOTE: This should probably be converted to a constant.
-    #
-    # @return a hash of headers that should prevent caching of a Rack response.
-    def hdr_nocache
-      {
-        "Expires"       => "Fri, 01 Jan 1980 00:00:00 GMT",
-        "Pragma"        => "no-cache",
-        "Cache-Control" => "no-cache, max-age=0, must-revalidate",
-      }
-    end
-
-    ##
-    # @return a hash of headers that should trigger caches permanent caching.
-    def hdr_cache_forever
-      now = Time.now().to_i
-      {
-        "Date"          => now.to_s,
-        "Expires"       => (now + 31_536_000).to_s,
-        "Cache-Control" => "public, max-age=31536000",
-      }
     end
   end
 end
