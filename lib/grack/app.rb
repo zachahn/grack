@@ -132,7 +132,11 @@ module Grack
             pack_type = match[2]
             return handle_pack(pack_type)
           elsif handler == :info_refs
-            return info_refs
+            return HandleInfoRefs.new(
+              git: git,
+              auth: @auth,
+              request_verb: verb
+            ).call(pack_type: request.params["service"])
           elsif handler == :text_file
             path = match[2]
             return HandleTextFile.new(
@@ -192,34 +196,6 @@ module Grack
 
       headers = { "Content-Type" => "application/x-#{@pack_type}-result" }
       exchange_pack(headers, request_io_in)
-    end
-
-    ##
-    # Processes requests for the list of refs for the requested repository.
-    #
-    # This works for both Smart HTTP clients and basic ones.  For basic clients,
-    # the Git adapter is used to update the +info/refs+ file which is then
-    # served to the clients.  For Smart HTTP clients, the more efficient pack
-    # file exchange mechanism is used.
-    #
-    # @return a Rack response object.
-    def info_refs
-      @pack_type = request.params["service"]
-      @auth.pack_type = @pack_type
-      return ErrorResponse.no_access unless @auth.authorized?
-
-      if @pack_type.nil?
-        git.update_server_info
-        send_file(
-          git.file("info/refs"), "text/plain; charset=utf-8", hdr_nocache
-        )
-      elsif valid_pack_type?
-        headers = hdr_nocache
-        headers["Content-Type"] = "application/x-#{@pack_type}-advertisement"
-        exchange_pack(headers, nil, { advertise_refs: true })
-      else
-        ErrorResponse.not_found
-      end
     end
 
     ##
