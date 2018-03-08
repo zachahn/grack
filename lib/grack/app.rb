@@ -130,7 +130,16 @@ module Grack
 
           if handler == :handle_pack
             pack_type = match[2]
-            return handle_pack(pack_type)
+            return HandlePack.new(
+              git: git,
+              auth: @auth,
+              request_verb: verb
+            ).call(
+              pack_type: pack_type,
+              content_type: request.content_type,
+              request_body: request.body,
+              encoding: env["HTTP_CONTENT_ENCODING"]
+            )
           elsif handler == :info_refs
             return HandleInfoRefs.new(
               git: git,
@@ -179,26 +188,6 @@ module Grack
     end
 
     ##
-    # Processes pack file exchange requests for both push and pull.  Ensures
-    # that the request is allowed and properly formatted.
-    #
-    # @param [String] pack_type the type of pack exchange to perform per the
-    #   request.
-    #
-    # @return a Rack response object.
-    def handle_pack(pack_type)
-      @pack_type = pack_type
-      @auth.pack_type = pack_type
-      unless request.content_type == "application/x-#{@pack_type}-request" &&
-             valid_pack_type? && @auth.authorized?
-        return ErrorResponse.no_access
-      end
-
-      headers = { "Content-Type" => "application/x-#{@pack_type}-result" }
-      exchange_pack(headers, request_io_in)
-    end
-
-    ##
     # Produces a Rack response that wraps the output from the Git adapter.
     #
     # A 404 response is produced if _streamer_ is +nil+.  Otherwise a 200
@@ -234,16 +223,6 @@ module Grack
       Rack::Response.new([], 200, headers).finish do |response|
         git.handle_pack(pack_type, io_in, response, opts)
       end
-    end
-
-    ##
-    # Transparently ensures that the request body is not compressed.
-    #
-    # @return [#read] a +read+-able object that yields uncompressed data from
-    #   the request body.
-    def request_io_in
-      return request.body unless env["HTTP_CONTENT_ENCODING"] =~ /gzip/
-      Zlib::GzipReader.new(request.body)
     end
 
     ##
