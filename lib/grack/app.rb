@@ -142,7 +142,11 @@ module Grack
             ).call(path: path)
           elsif handler == :info_packs
             path = match[2]
-            return info_packs(path)
+            return HandleInfoPacks.new(
+              git: git,
+              auth: @auth,
+              request_verb: verb
+            ).call(path: path)
           elsif handler == :loose_object
             path = match[2]
             return loose_object(path)
@@ -204,18 +208,6 @@ module Grack
       else
         ErrorResponse.not_found
       end
-    end
-
-    ##
-    # Processes requests for info packs for the requested repository.
-    #
-    # @param [String] path the path to an info pack file within a Git
-    #   repository.
-    #
-    # @return a Rack response object.
-    def info_packs(path)
-      return ErrorResponse.no_access unless @auth.authorized?
-      send_file(git.file(path), "text/plain; charset=utf-8", hdr_nocache)
     end
 
     ##
