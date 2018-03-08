@@ -6,7 +6,7 @@ module Grack
 
     attr_reader :git
 
-    def initialize(git:, auth:, request_verb:)
+    def initialize(git:, auth:)
       @git = git
       @auth = auth
     end

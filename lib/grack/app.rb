@@ -122,8 +122,7 @@ module Grack
           if handler == :handle_pack
             return HandlePack.new(
               git: git,
-              auth: @auth,
-              request_verb: verb
+              auth: @auth
             ).call(
               pack_type: match[2],
               content_type: request.content_type,
@@ -133,38 +132,32 @@ module Grack
           elsif handler == :info_refs
             return HandleInfoRefs.new(
               git: git,
-              auth: @auth,
-              request_verb: verb
+              auth: @auth
             ).call(pack_type: request.params["service"])
           elsif handler == :text_file
             return HandleTextFile.new(
               git: git,
-              auth: @auth,
-              request_verb: verb
+              auth: @auth
             ).call(path: match[2])
           elsif handler == :info_packs
             return HandleInfoPacks.new(
               git: git,
-              auth: @auth,
-              request_verb: verb
+              auth: @auth
             ).call(path: match[2])
           elsif handler == :loose_object
             return HandleLooseObject.new(
               git: git,
-              auth: @auth,
-              request_verb: verb
+              auth: @auth
             ).call(path: match[2])
           elsif handler == :pack_file
             return HandlePackFile.new(
               git: git,
-              auth: @auth,
-              request_verb: verb
+              auth: @auth
             ).call(path: match[2])
           elsif handler == :idx_file
             return HandleIdxFile.new(
               git: git,
-              auth: @auth,
-              request_verb: verb
+              auth: @auth
             ).call(path: match[2])
           end
         end
