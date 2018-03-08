@@ -128,7 +128,27 @@ module Grack
           git.repository_path = root + @repository_uri
           return ErrorResponse.not_found unless git.exist?
 
-          return send(handler, *match[2..-1])
+          if handler == :handle_pack
+            pack_type = match[2]
+            return handle_pack(pack_type)
+          elsif handler == :info_refs
+            return info_refs
+          elsif handler == :text_file
+            path = match[2]
+            return text_file(path)
+          elsif handler == :info_packs
+            path = match[2]
+            return info_packs(path)
+          elsif handler == :loose_object
+            path = match[2]
+            return loose_object(path)
+          elsif handler == :pack_file
+            path = match[2]
+            return pack_file(path)
+          elsif handler == :idx_file
+            path = match[2]
+            return idx_file(path)
+          end
         end
       end
       ErrorResponse.not_found
