@@ -135,7 +135,11 @@ module Grack
             return info_refs
           elsif handler == :text_file
             path = match[2]
-            return text_file(path)
+            return HandleTextFile.new(
+              git: git,
+              auth: @auth,
+              request_verb: verb
+            ).call(path: path)
           elsif handler == :info_packs
             path = match[2]
             return info_packs(path)
@@ -263,20 +267,6 @@ module Grack
         "application/x-git-packed-objects-toc",
         hdr_cache_forever
       )
-    end
-
-    ##
-    # Process a request for a generic file located at _path_ for the selected
-    # repository.  If the file is located, the content type is set to
-    # +text/plain+ and caching is disabled.
-    #
-    # @param [String] path the path to a file within a Git repository, such as
-    #   +HEAD+.
-    #
-    # @return a Rack response object.
-    def text_file(path)
-      return ErrorResponse.no_access unless @auth.authorized?
-      send_file(git.file(path), "text/plain", hdr_nocache)
     end
 
     ##
