@@ -156,7 +156,11 @@ module Grack
             ).call(path: path)
           elsif handler == :pack_file
             path = match[2]
-            return pack_file(path)
+            return HandlePackFile.new(
+              git: git,
+              auth: @auth,
+              request_verb: verb
+            ).call(path: path)
           elsif handler == :idx_file
             path = match[2]
             return HandleIdxFile.new(
@@ -216,22 +220,6 @@ module Grack
       else
         ErrorResponse.not_found
       end
-    end
-
-    ##
-    # Process a request for a pack file located at _path_ for the selected
-    # repository.  If the file is located, the content type is set to
-    # +application/x-git-packed-objects+ and permanent caching is enabled.
-    #
-    # @param [String] path the path to a pack file within a Git repository such
-    #   as +pack/pack-62c9f443d8405cd6da92dcbb4f849cc01a339c06.pack+.
-    #
-    # @return a Rack response object.
-    def pack_file(path)
-      return ErrorResponse.no_access unless @auth.authorized?
-      send_file(
-        git.file(path), "application/x-git-packed-objects", hdr_cache_forever
-      )
     end
 
     ##
