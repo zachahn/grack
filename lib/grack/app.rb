@@ -7,16 +7,16 @@ module Grack
     ##
     # Route mappings from URIs to valid verbs and handler functions.
     ROUTES = [
-      [%r{/(.*?)/(git-(?:upload|receive)-pack)$}, "POST", :handle_pack],
-      [%r{/(.*?)/info/refs$}, "GET", :info_refs],
-      [%r{/(.*?)/(HEAD)$}, "GET", :text_file],
-      [%r{/(.*?)/(objects/info/alternates)$}, "GET", :text_file],
-      [%r{/(.*?)/(objects/info/http-alternates)$}, "GET", :text_file],
-      [%r{/(.*?)/(objects/info/packs)$}, "GET", :info_packs],
-      [%r{/(.*?)/(objects/info/[^/]+)$}, "GET", :text_file],
-      [%r'/(.*?)/(objects/[0-9a-f]{2}/[0-9a-f]{38})$', "GET", :loose_object],
-      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.pack)$', "GET", :pack_file],
-      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.idx)$', "GET", :idx_file],
+      [%r{/(.*?)/(git-(?:upload|receive)-pack)$}, "POST", HandlePack],
+      [%r{/(.*?)/info/refs$}, "GET", HandleInfoRefs],
+      [%r{/(.*?)/(HEAD)$}, "GET", HandleTextFile],
+      [%r{/(.*?)/(objects/info/alternates)$}, "GET", HandleTextFile],
+      [%r{/(.*?)/(objects/info/http-alternates)$}, "GET", HandleTextFile],
+      [%r{/(.*?)/(objects/info/packs)$}, "GET", HandleInfoPacks],
+      [%r{/(.*?)/(objects/info/[^/]+)$}, "GET", HandleTextFile],
+      [%r'/(.*?)/(objects/[0-9a-f]{2}/[0-9a-f]{38})$', "GET", HandleLooseObject],
+      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.pack)$', "GET", HandlePackFile],
+      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.idx)$', "GET", HandleIdxFile],
     ]
 
     ##
@@ -102,7 +102,7 @@ module Grack
       # * Replace runs of / with a single /
       path_info = Rack::Utils.unescape(request.path_info).gsub(%r{/+}, "/")
 
-      ROUTES.each do |path_matcher, verb, handler|
+      ROUTES.each do |path_matcher, verb, handler_class|
         path_info.match(path_matcher) do |match|
           @repository_uri = match[1]
           auth = Auth.new(
@@ -119,46 +119,27 @@ module Grack
           git.repository_path = root + @repository_uri
           return ErrorResponse.not_found unless git.exist?
 
-          if handler == :handle_pack
-            return HandlePack.new(
-              git: git,
-              auth: auth
-            ).call(
+          handler = handler_class.new(git: git, auth: auth)
+
+          if handler_class == HandlePack
+            return handler.call(
               pack_type: match[2],
               content_type: request.content_type,
               request_body: request.body,
               encoding: env["HTTP_CONTENT_ENCODING"]
             )
-          elsif handler == :info_refs
-            return HandleInfoRefs.new(
-              git: git,
-              auth: auth
-            ).call(pack_type: request.params["service"])
-          elsif handler == :text_file
-            return HandleTextFile.new(
-              git: git,
-              auth: auth
-            ).call(path: match[2])
-          elsif handler == :info_packs
-            return HandleInfoPacks.new(
-              git: git,
-              auth: auth
-            ).call(path: match[2])
-          elsif handler == :loose_object
-            return HandleLooseObject.new(
-              git: git,
-              auth: auth
-            ).call(path: match[2])
-          elsif handler == :pack_file
-            return HandlePackFile.new(
-              git: git,
-              auth: auth
-            ).call(path: match[2])
-          elsif handler == :idx_file
-            return HandleIdxFile.new(
-              git: git,
-              auth: auth
-            ).call(path: match[2])
+          elsif handler_class == HandleInfoRefs
+            return handler.call(pack_type: request.params["service"])
+          elsif handler_class == HandleTextFile
+            return handler.call(path: match[2])
+          elsif handler_class == HandleInfoPacks
+            return handler.call(path: match[2])
+          elsif handler_class == HandleLooseObject
+            return handler.call(path: match[2])
+          elsif handler_class == HandlePackFile
+            return handler.call(path: match[2])
+          elsif handler_class == HandleIdxFile
+            return handler.call(path: match[2])
           end
         end
       end
