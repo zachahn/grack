@@ -149,7 +149,11 @@ module Grack
             ).call(path: path)
           elsif handler == :loose_object
             path = match[2]
-            return loose_object(path)
+            return HandleLooseObject.new(
+              git: git,
+              auth: @auth,
+              request_verb: verb
+            ).call(path: path)
           elsif handler == :pack_file
             path = match[2]
             return pack_file(path)
@@ -208,22 +212,6 @@ module Grack
       else
         ErrorResponse.not_found
       end
-    end
-
-    ##
-    # Processes a request for a loose object at _path_ for the selected
-    # repository.  If the file is located, the content type is set to
-    # +application/x-git-loose-object+ and permanent caching is enabled.
-    #
-    # @param [String] path the path to a loose object file within a Git
-    #   repository, such as +objects/31/d73eb4914a8ddb6cb0e4adf250777161118f90+.
-    #
-    # @return a Rack response object.
-    def loose_object(path)
-      return ErrorResponse.no_access unless @auth.authorized?
-      send_file(
-        git.file(path), "application/x-git-loose-object", hdr_cache_forever
-      )
     end
 
     ##
