@@ -66,12 +66,6 @@ module Grack
       @git = @git_adapter_factory.call
       @env = env
       @request = Rack::Request.new(env)
-      @auth = Auth.new(
-        env: env,
-        allow_push: @allow_push,
-        allow_pull: @allow_pull,
-        git: @git
-      )
       route
     end
 
@@ -111,7 +105,13 @@ module Grack
       ROUTES.each do |path_matcher, verb, handler|
         path_info.match(path_matcher) do |match|
           @repository_uri = match[1]
-          @auth.request_verb = verb
+          auth = Auth.new(
+            env: env,
+            allow_push: @allow_push,
+            allow_pull: @allow_pull,
+            git: @git,
+            request_verb: verb
+          )
 
           return method_not_allowed unless verb == request.request_method
           return ErrorResponse.bad_request if bad_uri?(@repository_uri)
@@ -122,7 +122,7 @@ module Grack
           if handler == :handle_pack
             return HandlePack.new(
               git: git,
-              auth: @auth
+              auth: auth
             ).call(
               pack_type: match[2],
               content_type: request.content_type,
@@ -132,32 +132,32 @@ module Grack
           elsif handler == :info_refs
             return HandleInfoRefs.new(
               git: git,
-              auth: @auth
+              auth: auth
             ).call(pack_type: request.params["service"])
           elsif handler == :text_file
             return HandleTextFile.new(
               git: git,
-              auth: @auth
+              auth: auth
             ).call(path: match[2])
           elsif handler == :info_packs
             return HandleInfoPacks.new(
               git: git,
-              auth: @auth
+              auth: auth
             ).call(path: match[2])
           elsif handler == :loose_object
             return HandleLooseObject.new(
               git: git,
-              auth: @auth
+              auth: auth
             ).call(path: match[2])
           elsif handler == :pack_file
             return HandlePackFile.new(
               git: git,
-              auth: @auth
+              auth: auth
             ).call(path: match[2])
           elsif handler == :idx_file
             return HandleIdxFile.new(
               git: git,
-              auth: @auth
+              auth: auth
             ).call(path: match[2])
           end
         end

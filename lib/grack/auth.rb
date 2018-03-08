@@ -1,15 +1,16 @@
 module Grack
   class Auth
-    def initialize(env:, git:, allow_push:, allow_pull:)
+    def initialize(env:, git:, allow_push:, allow_pull:, request_verb:)
       @env = env
       @git = git
       @allow_push = allow_push
       @allow_pull = allow_pull
+      @request_verb = request_verb
     end
 
     ##
     # The HTTP verb of the request.
-    attr_accessor :request_verb
+    attr_reader :request_verb
 
     ##
     # The requested pack type.  Will be +nil+ for requests that do no involve
