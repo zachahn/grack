@@ -13,6 +13,8 @@ require "rack/test"
 require "tempfile"
 require "zlib"
 
+require "pry"
+
 class Minitest::Test
   def git_path
     ENV.fetch("GIT_PATH", "git") # Path to git on test system
