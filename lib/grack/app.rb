@@ -36,87 +36,19 @@ module Grack
     #
     # @return a Rack response object.
     def call(env)
-      dup._call(env)
-    end
+      env["grack.root"] = @root
+      env["grack.allow_push"] = @allow_push
+      env["grack.allow_pull"] = @allow_pull
+      env["grack.git"] = @git_adapter_factory.call
 
-    protected
+      app =
+        Rack::Builder.new do
+          use Route
 
-    ##
-    # The real request handler.
-    #
-    # @param [Hash] env a Rack request hash.
-    #
-    # @return a Rack response object.
-    def _call(env)
-      @git = @git_adapter_factory.call
-      @env = env
-      @request = Rack::Request.new(env)
-      route
-    end
+          run DispatchHandler.new
+        end
 
-    private
-
-    ##
-    # The Rack request hash.
-    attr_reader :env
-
-    ##
-    # The request object built from the request hash.
-    attr_reader :request
-
-    ##
-    # The Git adapter instance for the requested repository.
-    attr_reader :git
-
-    ##
-    # The path containing 1 or more Git repositories which may be requested.
-    attr_reader :root
-
-    ##
-    # The path to the repository.
-    attr_reader :repository_uri
-
-    ##
-    # Routes requests to appropriate handlers.  Performs request path cleanup
-    # and several sanity checks prior to attempting to handle the request.
-    #
-    # @return a Rack response object.
-    def route
-      result = Route.new(git: git, root: root).call(env)
-      auth = Auth.new(
-        env: env,
-        allow_push: @allow_push,
-        allow_pull: @allow_pull,
-        git: @git,
-        request_verb: result[:verb]
-      )
-
-      handler = result[:handler].new(
-        git: @git,
-        auth: auth
-      )
-
-      match = result[:matches]
-
-      case handler
-      when HandleErrorBadRequest,
-        HandleErrorNoAccess,
-        HandleErrorNotFound,
-        HandleErrorMethodNotAllowed
-        return handler.call(env)
-      when HandlePack
-        env["grack.pack_type"] = match[2]
-        return handler.call(env)
-      when HandleInfoRefs
-        return handler.call(env)
-      when HandleTextFile,
-        HandleInfoPacks,
-        HandleLooseObject,
-        HandlePackFile,
-        HandleIdxFile
-        env["grack.path"] = match[2]
-        return handler.call(env)
-      end
+      app.call(env)
     end
   end
 end

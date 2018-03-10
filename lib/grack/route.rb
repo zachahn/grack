@@ -15,14 +15,14 @@ module Grack
       [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.idx)$', "GET", HandleIdxFile],
     ]
 
-    def initialize(git:, root:)
-      @git = git
-      @root = root
+    def initialize(app)
+      @app = app
     end
 
     def call(env)
       request = Rack::Request.new(env)
-      result = {}
+      git = env["grack.git"]
+      root = env["grack.root"]
 
       # Sanitize the URI:
       # * Unescape escaped characters
@@ -31,28 +31,27 @@ module Grack
 
       ROUTES.each do |path_matcher, verb, handler_class|
         path_info.match(path_matcher) do |match|
-          @git.repository_path = @root + match[1]
-          result[:repository_uri] = match[1]
-          result[:matches] = match
-          result[:verb] = verb
+          git.repository_path = root + match[1]
+          env["grack.matchdata"] = match
 
-          if verb != request.request_method
-            result[:handler] = HandleErrorMethodNotAllowed
-          elsif bad_uri?(result[:repository_uri])
-            result[:handler] = HandleErrorBadRequest
-          elsif !@git.exist?
-            result[:handler] = HandleErrorNotFound
-          else
-            result[:handler] = handler_class
-          end
+          env["grack.request_handler"] =
+            if verb != request.request_method
+              HandleErrorMethodNotAllowed
+            elsif bad_uri?(match[1])
+              HandleErrorBadRequest
+            elsif !git.exist?
+              HandleErrorNotFound
+            else
+              handler_class
+            end
         end
       end
 
-      if !result.key?(:handler)
-        result[:handler] = HandleErrorNotFound
+      if !env.key?("grack.request_handler")
+        env["grack.request_handler"] = HandleErrorNotFound
       end
 
-      result
+      @app.call(env)
     end
 
     private
