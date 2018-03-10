@@ -22,8 +22,8 @@ module Grack
     def call(env)
       encoding = env["HTTP_CONTENT_ENCODING"]
       request_body = env["rack.input"]
-      pack_type = env["grack.pack_type"]
-      @auth.pack_type = env["grack.pack_type"]
+      pack_type = env["grack.matchdata"]["pack_type"]
+      @auth.pack_type = pack_type
       content_type = env["CONTENT_TYPE"]
 
       unless content_type == "application/x-#{pack_type}-request" &&

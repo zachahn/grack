@@ -3,16 +3,16 @@ module Grack
     ##
     # Route mappings from URIs to valid verbs and handler functions.
     ROUTES = [
-      [%r{/(.*?)/(git-(?:upload|receive)-pack)$}, "POST", HandlePack],
-      [%r{/(.*?)/info/refs$}, "GET", HandleInfoRefs],
-      [%r{/(.*?)/(HEAD)$}, "GET", HandleTextFile],
-      [%r{/(.*?)/(objects/info/alternates)$}, "GET", HandleTextFile],
-      [%r{/(.*?)/(objects/info/http-alternates)$}, "GET", HandleTextFile],
-      [%r{/(.*?)/(objects/info/packs)$}, "GET", HandleInfoPacks],
-      [%r{/(.*?)/(objects/info/[^/]+)$}, "GET", HandleTextFile],
-      [%r'/(.*?)/(objects/[0-9a-f]{2}/[0-9a-f]{38})$', "GET", HandleLooseObject],
-      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.pack)$', "GET", HandlePackFile],
-      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.idx)$', "GET", HandleIdxFile],
+      [%r{/(?<repository_name>.*?)/(?<pack_type>git-(?:upload|receive)-pack)$}, "POST", HandlePack],
+      [%r{/(?<repository_name>.*?)/info/refs$}, "GET", HandleInfoRefs],
+      [%r{/(?<repository_name>.*?)/(?<path>HEAD)$}, "GET", HandleTextFile],
+      [%r{/(?<repository_name>.*?)/(?<path>objects/info/alternates)$}, "GET", HandleTextFile],
+      [%r{/(?<repository_name>.*?)/(?<path>objects/info/http-alternates)$}, "GET", HandleTextFile],
+      [%r{/(?<repository_name>.*?)/(?<path>objects/info/packs)$}, "GET", HandleInfoPacks],
+      [%r{/(?<repository_name>.*?)/(?<path>objects/info/[^/]+)$}, "GET", HandleTextFile],
+      [%r'/(?<repository_name>.*?)/(?<path>objects/[0-9a-f]{2}/[0-9a-f]{38})$', "GET", HandleLooseObject],
+      [%r'/(?<repository_name>.*?)/(?<path>objects/pack/pack-[0-9a-f]{40}\.pack)$', "GET", HandlePackFile],
+      [%r'/(?<repository_name>.*?)/(?<path>objects/pack/pack-[0-9a-f]{40}\.idx)$', "GET", HandleIdxFile],
     ]
 
     def initialize(app)
@@ -31,7 +31,7 @@ module Grack
 
       ROUTES.each do |path_matcher, verb, handler_class|
         path_info.match(path_matcher) do |match|
-          git.repository_path = root + match[1]
+          git.repository_path = root + match["repository_name"]
           env["grack.matchdata"] = match
 
           env["grack.request_handler"] =

@@ -21,25 +21,7 @@ module Grack
       )
       match = env["grack.matchdata"]
 
-      case handler
-      when HandleErrorBadRequest,
-        HandleErrorNoAccess,
-        HandleErrorNotFound,
-        HandleErrorMethodNotAllowed
-        return handler.call(env)
-      when HandlePack
-        env["grack.pack_type"] = match[2]
-        return handler.call(env)
-      when HandleInfoRefs
-        return handler.call(env)
-      when HandleTextFile,
-        HandleInfoPacks,
-        HandleLooseObject,
-        HandlePackFile,
-        HandleIdxFile
-        env["grack.path"] = match[2]
-        return handler.call(env)
-      end
+      return handler.call(env)
     end
   end
 end
