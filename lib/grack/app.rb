@@ -105,20 +105,17 @@ module Grack
         HandleErrorMethodNotAllowed
         return handler.call(env)
       when HandlePack
-        return handler.call(
-          pack_type: match[2],
-          content_type: request.content_type,
-          request_body: request.body,
-          encoding: env["HTTP_CONTENT_ENCODING"]
-        )
+        env["grack.pack_type"] = match[2]
+        return handler.call(env)
       when HandleInfoRefs
-        return handler.call(pack_type: request.params["service"])
+        return handler.call(env)
       when HandleTextFile,
         HandleInfoPacks,
         HandleLooseObject,
         HandlePackFile,
         HandleIdxFile
-        return handler.call(path: match[2])
+        env["grack.path"] = match[2]
+        return handler.call(env)
       end
     end
   end

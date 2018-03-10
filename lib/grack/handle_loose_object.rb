@@ -16,7 +16,8 @@ module Grack
     #   repository, such as +objects/31/d73eb4914a8ddb6cb0e4adf250777161118f90+.
     #
     # @return a Rack response object.
-    def call(path:)
+    def call(env)
+      path = env["grack.path"]
       return ErrorResponse.no_access unless @auth.authorized?
       send_file(
         git.file(path), "application/x-git-loose-object", hdr_cache_forever

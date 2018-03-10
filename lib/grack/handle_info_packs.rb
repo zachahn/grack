@@ -14,7 +14,8 @@ module Grack
     #   repository.
     #
     # @return a Rack response object.
-    def call(path:)
+    def call(env)
+      path = env["grack.path"]
       return ErrorResponse.no_access unless @auth.authorized?
       send_file(git.file(path), "text/plain; charset=utf-8", hdr_nocache)
     end

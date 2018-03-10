@@ -16,7 +16,8 @@ module Grack
     #   as +pack/pack-62c9f443d8405cd6da92dcbb4f849cc01a339c06.pack+.
     #
     # @return a Rack response object.
-    def call(path:)
+    def call(env)
+      path = env["grack.path"]
       return ErrorResponse.no_access unless @auth.authorized?
       send_file(
         git.file(path), "application/x-git-packed-objects", hdr_cache_forever

@@ -20,7 +20,9 @@ module Grack
     # file exchange mechanism is used.
     #
     # @return a Rack response object.
-    def call(pack_type:)
+    def call(env)
+      request = Rack::Request.new(env)
+      pack_type = request.params["service"]
       @auth.pack_type = pack_type
       return ErrorResponse.no_access unless @auth.authorized?
 

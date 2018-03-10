@@ -19,15 +19,19 @@ module Grack
     #   request.
     #
     # @return a Rack response object.
-    def call(pack_type:, content_type:, request_body:, encoding:)
-      @pack_type = pack_type
-      @auth.pack_type = pack_type
-      unless content_type == "application/x-#{@pack_type}-request" &&
+    def call(env)
+      encoding = env["HTTP_CONTENT_ENCODING"]
+      request_body = env["rack.input"]
+      pack_type = env["grack.pack_type"]
+      @auth.pack_type = env["grack.pack_type"]
+      content_type = env["CONTENT_TYPE"]
+
+      unless content_type == "application/x-#{pack_type}-request" &&
           valid_pack_type?(pack_type) && @auth.authorized?
           return ErrorResponse.no_access
       end
 
-      headers = { "Content-Type" => "application/x-#{@pack_type}-result" }
+      headers = { "Content-Type" => "application/x-#{pack_type}-result" }
       exchange_pack(headers, request_io_in(request_body, encoding), pack_type)
     end
 
