@@ -5,21 +5,6 @@ module Grack
   # A Rack application for serving Git repositories over HTTP.
   class App
     ##
-    # Route mappings from URIs to valid verbs and handler functions.
-    ROUTES = [
-      [%r{/(.*?)/(git-(?:upload|receive)-pack)$}, "POST", HandlePack],
-      [%r{/(.*?)/info/refs$}, "GET", HandleInfoRefs],
-      [%r{/(.*?)/(HEAD)$}, "GET", HandleTextFile],
-      [%r{/(.*?)/(objects/info/alternates)$}, "GET", HandleTextFile],
-      [%r{/(.*?)/(objects/info/http-alternates)$}, "GET", HandleTextFile],
-      [%r{/(.*?)/(objects/info/packs)$}, "GET", HandleInfoPacks],
-      [%r{/(.*?)/(objects/info/[^/]+)$}, "GET", HandleTextFile],
-      [%r'/(.*?)/(objects/[0-9a-f]{2}/[0-9a-f]{38})$', "GET", HandleLooseObject],
-      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.pack)$', "GET", HandlePackFile],
-      [%r'/(.*?)/(objects/pack/pack-[0-9a-f]{40}\.idx)$', "GET", HandleIdxFile],
-    ]
-
-    ##
     # Creates a new instance of this application with the configuration provided
     # by _opts_.
     #
@@ -97,89 +82,43 @@ module Grack
     #
     # @return a Rack response object.
     def route
-      # Sanitize the URI:
-      # * Unescape escaped characters
-      # * Replace runs of / with a single /
-      path_info = Rack::Utils.unescape(request.path_info).gsub(%r{/+}, "/")
+      result = Route.new(git: git, root: root).call(env)
+      auth = Auth.new(
+        env: env,
+        allow_push: @allow_push,
+        allow_pull: @allow_pull,
+        git: @git,
+        request_verb: result[:verb]
+      )
 
-      ROUTES.each do |path_matcher, verb, handler_class|
-        path_info.match(path_matcher) do |match|
-          @repository_uri = match[1]
-          auth = Auth.new(
-            env: env,
-            allow_push: @allow_push,
-            allow_pull: @allow_pull,
-            git: @git,
-            request_verb: verb
-          )
+      handler = result[:handler].new(
+        git: @git,
+        auth: auth
+      )
 
-          return method_not_allowed unless verb == request.request_method
-          return ErrorResponse.bad_request if bad_uri?(@repository_uri)
+      match = result[:matches]
 
-          git.repository_path = root + @repository_uri
-          return ErrorResponse.not_found unless git.exist?
-
-          handler = handler_class.new(git: git, auth: auth)
-
-          if handler_class == HandlePack
-            return handler.call(
-              pack_type: match[2],
-              content_type: request.content_type,
-              request_body: request.body,
-              encoding: env["HTTP_CONTENT_ENCODING"]
-            )
-          elsif handler_class == HandleInfoRefs
-            return handler.call(pack_type: request.params["service"])
-          elsif handler_class == HandleTextFile
-            return handler.call(path: match[2])
-          elsif handler_class == HandleInfoPacks
-            return handler.call(path: match[2])
-          elsif handler_class == HandleLooseObject
-            return handler.call(path: match[2])
-          elsif handler_class == HandlePackFile
-            return handler.call(path: match[2])
-          elsif handler_class == HandleIdxFile
-            return handler.call(path: match[2])
-          end
-        end
-      end
-      ErrorResponse.not_found
-    end
-
-    ##
-    # Determines whether or not _path_ is an acceptable URI.
-    #
-    # @param [String] path the path part of the request URI.
-    #
-    # @return [Boolean] +true+ if the requested path is considered invalid;
-    #   otherwise, +false+.
-    def bad_uri?(path)
-      invalid_segments = %w[. ..]
-      path.split("/").any? { |segment| invalid_segments.include?(segment) }
-    end
-
-    # --------------------------------------
-    # HTTP error response handling functions
-    # --------------------------------------
-
-    ##
-    # A shorthand for specifying a text content type for the Rack response.
-    PLAIN_TYPE = { "Content-Type" => "text/plain" }
-
-    ##
-    # Returns a Rack response appropriate for requests that use invalid verbs
-    # for the requested resources.
-    #
-    # For HTTP 1.1 requests, a 405 code is returned.  For other versions, the
-    # value from #bad_request is returned.
-    #
-    # @return a Rack response appropriate for requests that use invalid verbs
-    #   for the requested resources.
-    def method_not_allowed
-      if env["SERVER_PROTOCOL"] == "HTTP/1.1"
-        [405, PLAIN_TYPE, ["Method Not Allowed"]]
-      else
-        ErrorResponse.bad_request
+      case handler
+      when HandleErrorBadRequest,
+        HandleErrorNoAccess,
+        HandleErrorNotFound,
+        HandleErrorMethodNotAllowed
+        return handler.call(env)
+      when HandlePack
+        return handler.call(
+          pack_type: match[2],
+          content_type: request.content_type,
+          request_body: request.body,
+          encoding: env["HTTP_CONTENT_ENCODING"]
+        )
+      when HandleInfoRefs
+        return handler.call(pack_type: request.params["service"])
+      when HandleTextFile,
+        HandleInfoPacks,
+        HandleLooseObject,
+        HandlePackFile,
+        HandleIdxFile
+        return handler.call(path: match[2])
       end
     end
   end
