@@ -25,6 +25,8 @@ module Grack
       @allow_pull = opts.fetch(:allow_pull, nil)
       @git_adapter_factory =
         opts.fetch(:git_adapter_factory, -> { GitAdapter.new })
+      @middleware =
+        opts.fetch(:middleware, Noop)
     end
 
     ##
@@ -40,11 +42,12 @@ module Grack
       env["grack.allow_push"] = @allow_push
       env["grack.allow_pull"] = @allow_pull
       env["grack.git"] = @git_adapter_factory.call
+      middleware = @middleware
 
       app =
         Rack::Builder.new do
           use Route
-
+          use middleware
           run DispatchHandler.new
         end
 
